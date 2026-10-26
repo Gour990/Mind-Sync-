@@ -1,0 +1,645 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dosti Duel Online</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;600;800&display=swap">
+<style>
+:root{
+  /* Layout: one centred column, one card per step. Each player sees only their own screen.
+     Look: committed dark game-show stage, two player colours plus one sunny highlight. */
+  color-scheme:dark;
+  --bg:#15122f; --surface:#221d4d; --surface2:#322b6b; --line:#4a4290;
+  --ink:#fff4e3; --muted:#bab2df;
+  --p1:#ff6a5c; --p1-ink:#2a0a05;
+  --p2:#2fd3c0; --p2-ink:#032a26;
+  --sun:#ffcf40; --sun-ink:#2b1c00;
+  --good:#6be39a; --bad:#ff8f8f;
+  --f-display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Figtree","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-block:16px 32px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{max-width:480px;margin-inline:auto}
+p{margin:0}
+h1,h2{font-family:var(--f-display);font-weight:400;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(42px,14vw,64px)}
+h2{font-size:clamp(24px,7vw,30px)}
+b{font-weight:800}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted)}
+.n1{color:var(--p1)} .n2{color:var(--p2)}
+.fine{font-size:13px;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+
+.hud{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:stretch}
+.pl{background:var(--surface);border-radius:16px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0}
+.pl span{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pl b{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.pl.p1{border-bottom:4px solid var(--p1)} .pl.p1 b{color:var(--p1)}
+.pl.p2{border-bottom:4px solid var(--p2)} .pl.p2 b{color:var(--p2)}
+.vs{align-self:center;font-family:var(--f-display);color:var(--sun);font-size:18px}
+.track{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.track i{height:6px;border-radius:3px;background:var(--surface2)}
+.track i.on{background:var(--sun)}
+.track i.cur{background:var(--muted)}
+.net{margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--surface2);color:var(--sun);font-size:14px;font-weight:600}
+
+.stage{background:var(--surface);border-radius:22px;padding:22px;margin-top:14px;display:grid;gap:16px;animation:rise .28s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.btn{font:inherit;font-weight:800;font-size:17px;border:2px solid transparent;border-radius:14px;padding:15px 18px;width:100%;cursor:pointer;color:var(--ink);background:var(--surface2);transition:transform .08s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--sun);color:var(--sun-ink)}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.pick1{background:var(--p1);color:var(--p1-ink)}
+.btn.pick2{background:var(--p2);color:var(--p2-ink)}
+.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.three{display:grid;gap:10px}
+label.f{display:block;font-size:13px;font-weight:800;color:var(--muted);margin-bottom:6px}
+input[type=text]{font:inherit;width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;font-weight:600;display:flex;align-items:center;gap:12px;text-align:left;padding:13px 14px;border-radius:14px;border:2px solid transparent;background:var(--surface2);color:var(--ink);cursor:pointer;min-width:0}
+.opt:hover{border-color:var(--sun)}
+.opt:disabled{opacity:.55;cursor:default}
+.opt .k{flex:none;width:30px;height:30px;border-radius:50%;background:var(--bg);color:var(--sun);display:grid;place-items:center;font-weight:800;font-size:14px}
+.opt span:last-child{min-width:0;overflow-wrap:anywhere}
+.consent{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:14px;color:var(--muted);margin:0}
+.consent input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:var(--sun)}
+
+.verdict{font-family:var(--f-display);font-size:30px;line-height:1.1}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.big{font-family:var(--f-display);font-size:clamp(40px,12vw,56px);line-height:1;font-variant-numeric:tabular-nums}
+.emoji{font-size:clamp(52px,17vw,76px);text-align:center;line-height:1.2;padding:12px 0;background:var(--bg);border-radius:18px;overflow-wrap:anywhere}
+.hint{background:var(--bg);border-radius:12px;padding:10px 14px;color:var(--sun);font-weight:600}
+.answer{font-family:var(--f-display);font-size:26px;color:var(--sun);text-align:center;overflow-wrap:anywhere}
+.dare{font-size:clamp(22px,6.4vw,27px)}
+.timer{display:flex;align-items:baseline;gap:8px;justify-content:center}
+.timer b{font-family:var(--f-display);font-weight:400;font-size:56px;line-height:1;font-variant-numeric:tabular-nums;color:var(--sun)}
+.count{font-family:var(--f-display);font-size:clamp(110px,40vw,200px);text-align:center;color:var(--sun);padding:40px 0}
+.waitbox{display:flex;gap:12px;align-items:center;background:var(--bg);border-radius:14px;padding:14px 16px;color:var(--muted)}
+.waitbox .dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--sun);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.55);opacity:.5}}
+.code{font-family:var(--f-display);font-size:clamp(44px,15vw,64px);letter-spacing:.14em;text-align:center;color:var(--sun);background:var(--bg);border-radius:18px;padding:14px 8px;text-transform:uppercase;overflow-wrap:anywhere}
+.who{display:flex;align-items:center;gap:10px;font-weight:600}
+.who i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.who i.here{background:var(--good)}
+
+.tapview{display:grid;grid-template-rows:auto auto 1fr;gap:12px;height:72vh;min-height:400px}
+.opp{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:10px 16px}
+.opp small{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opp b{font-family:var(--f-display);font-weight:400;font-size:34px;font-variant-numeric:tabular-nums}
+.clock{text-align:center;font-family:var(--f-display);font-size:44px;color:var(--sun);line-height:1;font-variant-numeric:tabular-nums}
+.tapbtn{font:inherit;border:0;border-radius:24px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;display:grid;place-items:center}
+.tapbtn.t1{background:var(--p1);color:var(--p1-ink)}
+.tapbtn.t2{background:var(--p2);color:var(--p2-ink)}
+.tapbtn:active{filter:brightness(1.12)}
+.tapbtn span{display:grid;gap:2px;justify-items:center}
+.tapbtn small{font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.tapbtn b{font-family:var(--f-display);font-weight:400;font-size:clamp(64px,22vw,110px);line-height:1;font-variant-numeric:tabular-nums}
+
+.bars{display:grid;gap:12px}
+.bar{display:grid;gap:6px}
+.bar .row{display:flex;justify-content:space-between;gap:8px;font-weight:800}
+.bar .row span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .row b{font-variant-numeric:tabular-nums}
+.bar .tr{height:14px;border-radius:7px;background:var(--bg);overflow:hidden}
+.bar .fl{height:100%;border-radius:7px;transition:width .8s ease-out;width:0}
+.fl.p1{background:var(--p1)} .fl.p2{background:var(--p2)}
+.awards{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.awards li{display:flex;justify-content:space-between;gap:12px;background:var(--bg);border-radius:12px;padding:10px 14px;align-items:center}
+.awards li span:first-child{color:var(--muted);font-size:14px}
+.awards li span:last-child{font-weight:800;text-align:right;min-width:0;overflow-wrap:anywhere}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
+.confetti span{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app" class="wrap"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- content (same on both phones; only indexes travel online) ---------- */
+var R=[
+ {id:"quiz",t:"Jaano Mujhe",rule:"Flirty sawaal. Ek player apne baare mein chupke se jawab chunta hai, doosra guess karta hai. Sahi guess par +2 points."},
+ {id:"match",t:"Mind Match",rule:"Dono apne phone par chupke se ek hi sawaal ka jawab chunte ho. Jawab match hua to dono ko +2."},
+ {id:"tap",t:"Tap Battle",rule:"10 second, dono apne phone par tap karo. Jo zyada tap karega wo +3 jeetega."},
+ {id:"dare",t:"Dare Dhamaka",rule:"Har player ko ek funny dare milta hai. Video ya voice call par karke dikhao. Doosra judge karta hai: maza aaya to +2, thoda boring to +1. Comfortable nahi ho to Pass."},
+ {id:"emoji",t:"Emoji Filmy",rule:"Emoji dekho aur filmy naam bolo. Jo pehle sahi bole use +2. Call par bolna padega."}
+];
+
+var QUIZ=[
+ {q:"Pehli date par sabse pehle kya notice karte ho?",o:["Smile","Aankhein","Style aur kapde","Baat karne ka tareeka"]},
+ {q:"Crush ko text karne ke baad reply ka intezaar kaise karte ho?",o:["Phone haath se chhodta/chhodti hi nahi","Busy hone ka natak karta/karti hoon","Dosto se reply ka analysis karwata/karwati hoon","Double text kar deta/deti hoon"]},
+ {q:"Tumhara flirt karne ka style kya hai?",o:["Filmy dialogue maarna","Seedhe compliments dena","Chhed-chhaad aur taane","Bas ghoor ke dekhna"]},
+ {q:"Late night call par aksar kya hota hai?",o:["Subah tak baatein","Ek ghanta chup chaap saath rehna","Gaane aur shayari","Aadhi baat mein neend aa jaati hai"]},
+ {q:"Tumhara perfect romantic date plan kya hai?",o:["Candlelight dinner","Raat ki long drive","Chai tapri par baatein","Ghar par movie night"]},
+ {q:"Kisi ki kaunsi cheez tumhara dil jeet leti hai?",o:["Muskurahat","Sense of humour","Care karna","Confidence"]},
+ {q:"Kabhi kisi ka message dekh kar jaanbujhkar reply nahi kiya?",o:["Haan, bahut baar","Kabhi kabhi","Kabhi nahi","Ye sawaal chhodo"]}
+];
+var WYR=[
+ ["Raat bhar sirf baatein karna","Saath mein late night drive par jaana"],
+ ["Roz subah ek pyara good morning text","Hafte mein ek surprise date"],
+ ["Sabke saamne filmy proposal","Chupke se ek handwritten letter"],
+ ["Pehli date par late pahunchna","Pehli date par wallet bhool jaana"],
+ ["Dost ke saamne pyaar jatana","Akele mein dil ki baat kehna"],
+ ["Ek hafte sirf shayari mein baat karna","Ek hafte sirf emoji mein baat karna"]
+];
+var DARES=[
+ "Ek filmy pickup line bolo, poori acting aur dramatic pause ke saath.",
+ "Samne wale ki 3 sachchi tareefein karo, dil se aur seedhe aankhon mein dekh kar.",
+ "Samne wale ke liye shayari ki 2 line abhi banao aur sunao.",
+ "15 second tak video par ek doosre ki aankhon mein dekho bina hanse. Jo pehle hansa wo haara.",
+ "Batao ki pehli baar milne par samne wale ke baare mein kya laga tha.",
+ "Hero ya heroine ban kar 20 second ka filmy proposal do.",
+ "Samne wale ko ek cute nickname do aur batao ki wahi kyun.",
+ "Ek chhota sa harmless raaz batao jo tumne abhi tak samne wale se nahi kaha.",
+ "Shaadi ke pandit ki awaaz mein samne wale ki tareef mein ek lamba dialogue bolo.",
+ "Slow motion mein apni sabse filmy entry karke dikhao, hawa ke saath."
+];
+var EMOJI=[
+ {e:"❤️👰🚆",a:"Dilwale Dulhania Le Jayenge",h:"Raj aur Simran, sarson ke khet"},
+ {e:"3️⃣🤪🎓",a:"3 Idiots",h:"All is well"},
+ {e:"😄😢👨‍👩‍👧‍👦",a:"Kabhi Khushi Kabhie Gham",h:"4 shabd, bada family drama"},
+ {e:"🏏🌧️🌾",a:"Lagaan",h:"Ek shabd, gaon vs angrez, match"},
+ {e:"🚆💞🤝",a:"Jab We Met",h:"Geet aur Aditya"},
+ {e:"🌴🚄💨",a:"Chennai Express",h:"Rohit Shetty ki train"},
+ {e:"🐒🙏👧🇵🇰",a:"Bajrangi Bhaijaan",h:"Munni ko ghar chhodna hai"},
+ {e:"🛤️🎤👦",a:"Gully Boy",h:"Apna time aayega"}
+];
+var OK=["Wah! Aap to jasoos nikle.","Bilkul sahi! Itna dhyaan?","Dil se dil ka connection hai."];
+var NO=["Galat! Ab chai pilani padegi.","Thoda aur dhyaan do boss.","Arre! Itna bhi nahi jaante?"];
+var SAME=["Dimaag ek jaisa chalta hai, dangerous combo!","Match! Aap dono ek hi planet se ho.","Same to same! Ab saath mein samosa banta hai."];
+var DIFF=["Alag alag! Ab 30 second debate karo, kaun sahi hai.","Match nahi hua. Ek doosre ko convince karne ki koshish karo.","Dono ki soch alag. Maza isi mein hai."];
+
+/* ---------- state ----------
+   Host (player 0) owns the game state G and publishes it in its presence.
+   Guest (player 1) sends intents in its presence; host applies them and republishes. */
+var app=document.getElementById("app");
+var base=null, nr=null, code="", role=-1, myName="";
+var G=null, partner={name:"",here:false}, mode="home", noHost=false, errMsg="";
+var SEC=null, PK=[null,null], TAPN=[null,null], tapT=null;
+var gPeer=null, lastIntent="", lastV=-1, intentN=0;
+var tapRunV=-1, myTap=0, oppLive=0, confV=-1;
+var timers=[];
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function nm(i){return esc((G&&G.names&&G.names[i])||("Player "+(i+1)));}
+function pn(i){return '<span class="n'+(i+1)+'">'+nm(i)+(i===role?" (tum)":"")+'</span>';}
+function pickIdx(len,n){var a=[],i;for(i=0;i<len;i++)a.push(i);return a.sort(function(){return Math.random()-.5;}).slice(0,n);}
+function say(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function later(fn,ms){timers.push(setTimeout(fn,ms));}
+function qs(sel){return app.querySelector(sel);}
+function on(sel,fn){Array.prototype.forEach.call(app.querySelectorAll(sel),function(el){el.addEventListener("click",function(){fn(el);});});}
+function lock(){Array.prototype.forEach.call(app.querySelectorAll(".stage button"),function(b){b.disabled=true;});}
+function optsHtml(arr){
+  return '<div class="opts">'+arr.map(function(t,i){
+    return '<button class="opt" data-i="'+i+'"><span class="k">'+"ABCD"[i]+'</span><span>'+t+'</span></button>';
+  }).join("")+'</div>';
+}
+function waitHtml(msg){return '<div class="waitbox" role="status"><span class="dot"></span><p>'+msg+'</p></div>';}
+function hud(){
+  var seg=R.map(function(_,i){return '<i class="'+(G.ph==="final"||i<G.r?"on":i===G.r?"cur":"")+'"></i>';}).join("");
+  return '<header class="hud"><div class="pl p1"><span>'+nm(0)+(role===0?" (tum)":"")+'</span><b>'+G.sc[0]+'</b></div><div class="vs">VS</div><div class="pl p2"><span>'+nm(1)+(role===1?" (tum)":"")+'</span><b>'+G.sc[1]+'</b></div></header>'+
+    '<div class="track" aria-hidden="true">'+seg+'</div>'+
+    '<p class="net" id="net" role="status"'+(partner.here?" hidden":"")+'>Dost ka connection dikh nahi raha. Wapas aane ka intezaar hai.</p>';
+}
+function view(inner,withHud){
+  timers.forEach(function(t){clearTimeout(t);clearInterval(t);});
+  timers=[];
+  app.innerHTML=(withHud&&G?hud():"")+'<main class="stage">'+inner+'</main>';
+  window.scrollTo(0,0);
+}
+function copyText(t,btn){
+  function done(){if(btn){var o=btn.textContent;btn.textContent="Copy ho gaya";setTimeout(function(){btn.textContent=o;},1400);}}
+  try{navigator.clipboard.writeText(t).then(done,function(){});}catch(e){}
+}
+function save(){
+  try{localStorage.setItem("dd-online",JSON.stringify({code:code,role:role,name:myName,G:role===0?G:null}));}catch(e){}
+}
+function loadSaved(){
+  try{var s=JSON.parse(localStorage.getItem("dd-online")||"null");return s&&s.code?s:null;}catch(e){return null;}
+}
+function clearSaved(){try{localStorage.removeItem("dd-online");}catch(e){}}
+
+/* ---------- host game logic ---------- */
+function newG(names){
+  return {v:1,ph:"intro",r:0,names:names,sc:[0,0],ty:{quiz:[0,0],match:[0,0],tap:[0,0],dare:[0,0],emoji:[0,0]},d:null};
+}
+function award(p,n,cat){G.sc[p]+=n;G.ty[cat][p]+=n;}
+function nextRound(){G.r++;G.d=null;G.ph=G.r>=R.length?"final":"intro";}
+function startRound(){
+  var id=R[G.r].id;
+  SEC=null;PK=[null,null];TAPN=[null,null];
+  G.ph="play";
+  if(id==="quiz")G.d={qs:pickIdx(QUIZ.length,4),i:0,st:"ans"};
+  if(id==="match")G.d={qs:pickIdx(WYR.length,3),i:0,st:"pick",done:[0,0]};
+  if(id==="tap")G.d={st:"ready"};
+  if(id==="dare")G.d={ds:pickIdx(DARES.length,2),i:0};
+  if(id==="emoji")G.d={ps:pickIdx(EMOJI.length,3),i:0,st:"q"};
+}
+function commit(){
+  G.v++;save();
+  if(nr){nr.presence({s:G}).catch(function(){});}
+  renderPlay();
+}
+function isInt(x,lo,hi){return typeof x==="number"&&isFinite(x)&&Math.floor(x)===x&&x>=lo&&x<=hi;}
+
+function tapCheck(){
+  if(!G||G.ph!=="play"||R[G.r].id!=="tap"||G.d.st!=="run")return;
+  if(TAPN[0]===null||TAPN[1]===null)return;
+  clearTimeout(tapT);
+  var c=[TAPN[0],TAPN[1]];
+  if(c[0]===c[1]){award(0,1,"tap");award(1,1,"tap");}else{award(c[0]>c[1]?0:1,3,"tap");}
+  G.d={st:"res",c:c};
+  commit();
+}
+
+function apply(p,t,x,v){
+  if(!G)return;
+  x=x||{};
+  var d=G.d,rid=G.ph==="play"?R[G.r].id:"";
+  if(t==="tapdone"){
+    if(rid==="tap"&&d.st==="run"&&v===G.v&&isInt(x.n,0,2000)&&TAPN[p]===null){TAPN[p]=x.n;
+      if(p===0&&TAPN[1]===null){clearTimeout(tapT);tapT=setTimeout(function(){if(TAPN[1]===null){TAPN[1]=oppLive||0;tapCheck();}},4500);}
+      tapCheck();}
+    return;
+  }
+  if(v!==G.v)return;
+  if(G.ph==="intro"&&t==="go"){startRound();commit();return;}
+  if(G.ph==="final"&&t==="again"){var nn=G.names,ov=G.v;G=newG(nn);G.v=ov;SEC=null;PK=[null,null];TAPN=[null,null];commit();return;}
+  if(G.ph!=="play")return;
+
+  if(rid==="quiz"){
+    var sub=d.i%2,gs=1-sub,q=QUIZ[d.qs[d.i]];
+    if(t==="qans"&&d.st==="ans"&&p===sub&&isInt(x.i,0,q.o.length-1)){SEC=x.i;d.st="guess";commit();}
+    else if(t==="qguess"&&d.st==="guess"&&p===gs&&isInt(x.i,0,q.o.length-1)&&SEC!==null){
+      var ok=x.i===SEC;if(ok)award(gs,2,"quiz");
+      d.g=x.i;d.sec=SEC;d.ok=ok?1:0;d.st="res";commit();}
+    else if(t==="next"&&d.st==="res"){
+      d.i++;SEC=null;
+      if(d.i>=d.qs.length){nextRound();}else{d.st="ans";delete d.g;delete d.sec;delete d.ok;}
+      commit();}
+  }else if(rid==="match"){
+    if(t==="mpick"&&d.st==="pick"&&d.done[p]===0&&isInt(x.i,0,1)){
+      PK[p]=x.i;d.done[p]=1;
+      if(d.done[0]&&d.done[1]){d.a=[PK[0],PK[1]];if(PK[0]===PK[1]){award(0,2,"match");award(1,2,"match");}d.st="res";}
+      commit();}
+    else if(t==="next"&&d.st==="res"){
+      d.i++;PK=[null,null];
+      if(d.i>=d.qs.length){nextRound();}else{d.st="pick";d.done=[0,0];delete d.a;}
+      commit();}
+  }else if(rid==="tap"){
+    if(t==="tapgo"&&d.st==="ready"){TAPN=[null,null];d.st="run";commit();}
+    else if(t==="next"&&d.st==="res"){nextRound();commit();}
+  }else if(rid==="dare"){
+    if(t==="dj"&&p===1-d.i&&isInt(x.s,0,2)){
+      award(d.i,x.s,"dare");d.i++;
+      if(d.i>=d.ds.length){nextRound();}
+      commit();}
+  }else if(rid==="emoji"){
+    if(t==="reveal"&&d.st==="q"){d.st="ans";commit();}
+    else if(t==="who"&&d.st==="ans"&&isInt(x.w,-1,1)){
+      if(x.w>=0)award(x.w,2,"emoji");
+      d.i++;
+      if(d.i>=d.ps.length){nextRound();}else{d.st="q";}
+      commit();}
+  }
+}
+
+function act(t,x){
+  if(!G)return;
+  if(role===0){apply(0,t,x,G.v);}
+  else if(nr){nr.presence({i:{id:code+"-"+(++intentN)+"-"+Date.now(),v:G.v,t:t,x:x||null}}).catch(function(){});}
+}
+
+/* ---------- peers ---------- */
+function handlePeers(){
+  if(!nr)return;
+  var ps=nr.peers(),host=null,guests=[];
+  ps.forEach(function(p){
+    if(p.isMe)return;
+    var pr=p.presence||{};
+    if(pr.role==="host")host=p;else if(pr.role==="guest")guests.push(p);
+  });
+  var opp=null;
+  if(role===0){
+    var g=null;
+    if(gPeer){g=guests.filter(function(x){return x.peer===gPeer;})[0]||null;}
+    if(!g&&guests.length){g=guests[0];gPeer=g.peer;}
+    opp=g;
+    partner={name:g?String((g.presence.name||"Dost")).slice(0,14):partner.name,here:!!g};
+    if(g&&g.presence.i&&g.presence.i.id!==lastIntent){
+      var it=g.presence.i;lastIntent=it.id;
+      if(typeof it.t==="string")apply(1,it.t,it.x,it.v);
+    }
+  }else{
+    opp=host;
+    partner={name:host?String((host.presence.name||"Host")).slice(0,14):partner.name,here:!!host};
+    var s=host&&host.presence.s;
+    if(s&&typeof s==="object"&&s.v!==lastV){lastV=s.v;G=s;save();mode="play";renderPlay();}
+  }
+  var tp=opp&&opp.presence.tap;
+  oppLive=(tp&&G&&tp.v===G.v&&isInt(tp.n,0,5000))?tp.n:0;
+  var oc=qs("#oc");if(oc)oc.textContent=oppLive;
+  var net=qs("#net");if(net)net.hidden=partner.here;
+  if(mode==="hostWait"||mode==="guestWait")render();
+}
+
+/* ---------- screens ---------- */
+function render(){
+  if(mode==="play"){renderPlay();return;}
+  if(mode==="hostWait")return vHostWait();
+  if(mode==="guestWait")return vGuestWait();
+  vHome();
+}
+function vHome(){
+  var sv=loadSaved();
+  view('<div><p class="eyebrow">18+ only · 2 phones · online</p><h1>Dosti Duel</h1></div>'+
+    '<p class="lead">Dost kitna bhi door ho, dono apne-apne phone par khelo. Dare aur emoji ke liye video ya voice call chalu rakho.</p>'+
+    (errMsg?'<p class="bad"><b>'+esc(errMsg)+'</b></p>':'')+
+    '<div><label class="f" for="nm">Tumhara naam</label><input type="text" id="nm" maxlength="14" autocomplete="off" placeholder="Naam likho" value="'+esc(myName)+'"></div>'+
+    '<label class="consent" for="age"><input type="checkbox" id="age"><span>Hum dono 18+ hain aur is flirty khel ke liye raazi hain. Kisi ko bhi kabhi bhi Pass bolne ka haq hai.</span></label>'+
+    '<button class="btn primary" id="mk" disabled>Naya room banao</button>'+
+    '<hr><div><label class="f" for="cd">Dost ne code bheja hai?</label><input type="text" id="cd" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="5 akshar ka code"></div>'+
+    '<button class="btn pick2" id="jn" disabled>Room mein judo</button>'+
+    (sv?'<button class="btn ghost" id="rs">Pichhle room ('+esc(sv.code.toUpperCase())+') mein wapas jao</button>':''),false);
+  var age=qs("#age"),cd=qs("#cd");
+  function upd(){qs("#mk").disabled=!age.checked;qs("#jn").disabled=!(age.checked&&cd.value.trim().length===5);}
+  age.addEventListener("change",upd);cd.addEventListener("input",upd);
+  function nmv(def){return qs("#nm").value.trim().slice(0,14)||def;}
+  on("#mk",function(){
+    var al="abcdefghjkmnpqrstuvwxyz23456789",c="",i;
+    for(i=0;i<5;i++)c+=al[Math.floor(Math.random()*al.length)];
+    enter(c,0,nmv("Player 1"),null);
+  });
+  on("#jn",function(){enter(cd.value.trim().toLowerCase().replace(/[^a-z0-9]/g,""),1,nmv("Player 2"),null);});
+  on("#rs",function(){enter(sv.code,sv.role,sv.name||(sv.role===0?"Player 1":"Player 2"),sv.G);});
+}
+function vHostWait(){
+  var c=code.toUpperCase();
+  view('<p class="eyebrow">Room ban gaya</p><h2>Dost ko ye code do</h2>'+
+    '<div class="code" aria-label="Room code">'+esc(c)+'</div>'+
+    '<button class="btn ghost" id="cp">Code copy karo</button>'+
+    '<p class="lead">Dost ko is page ka link bhi bhejo (Share menu se), phir wo "Room mein judo" mein ye code daale.</p>'+
+    '<div class="who"><i class="'+(partner.here?"here":"")+'"></i><span>'+(partner.here?esc(partner.name)+" aa gaya/gayi":"Dost ka intezaar hai…")+'</span></div>'+
+    '<button class="btn primary" id="st"'+(partner.here?"":" disabled")+'>Khel shuru karo</button>'+
+    '<button class="btn ghost" id="bk">Wapas</button>',false);
+  on("#cp",function(el){copyText(c,el);});
+  on("#bk",leave);
+  on("#st",function(){
+    if(!partner.here)return;
+    G=newG([myName,partner.name||"Dost"]);
+    mode="play";commit();
+  });
+}
+function vGuestWait(){
+  view('<p class="eyebrow">Room '+esc(code.toUpperCase())+'</p>'+
+    (noHost?'<h2>Host nahi mila</h2><p class="lead">Code sahi hai? Dost ne pehle "Naya room banao" dabana hai, uske baad tum judo.</p><button class="btn primary" id="rt">Dobara try karo</button>'
+           :'<h2>Judh gaye!</h2>'+waitHtml(partner.here?esc(partner.name)+" khel shuru karega. Bas thoda ruko.":"Host ko dhoondh raha hoon…"))+
+    '<button class="btn ghost" id="bk">Wapas</button>',false);
+  on("#bk",leave);
+  on("#rt",function(){var c=code,n=myName;leaveQuiet();enter(c,1,n,null);});
+}
+function renderPlay(){
+  if(!G||mode!=="play")return;
+  if(G.ph==="intro")return vIntro();
+  if(G.ph==="final")return vFinal();
+  ({quiz:vQuiz,match:vMatch,tap:vTap,dare:vDare,emoji:vEmoji})[R[G.r].id]();
+}
+function vIntro(){
+  var r=R[G.r];
+  view('<p class="eyebrow">Round '+(G.r+1)+' / '+R.length+'</p><h2>'+r.t+'</h2><p class="lead">'+r.rule+'</p><button class="btn primary" id="go">Shuru karo</button><p class="fine">Koi bhi dabaye, dono ki screen par agla step khul jayega.</p>',true);
+  on("#go",function(){lock();act("go");});
+}
+
+function vQuiz(){
+  var d=G.d,sub=d.i%2,gs=1-sub,q=QUIZ[d.qs[d.i]],n=(d.i+1)+" / "+d.qs.length;
+  if(d.st==="ans"){
+    if(role===sub){
+      view('<p class="eyebrow">Sawaal '+n+' · tumhari baari</p><h2>'+q.q+'</h2><p class="lead">Apne baare mein sach chuno. '+pn(gs)+' guess karega.</p>'+optsHtml(q.o),true);
+      on(".opt",function(el){lock();act("qans",{i:+el.dataset.i});});
+    }else{
+      view('<p class="eyebrow">Sawaal '+n+'</p><h2>'+q.q+'</h2>'+waitHtml(pn(sub)+" apne baare mein chupke se jawab chun raha hai. Tumhe guess karna hai."),true);
+    }
+  }else if(d.st==="guess"){
+    if(role===gs){
+      view('<p class="eyebrow">Sawaal '+n+' · tumhari baari</p><h2>'+pn(sub)+' ne apne liye kya chuna?</h2><p class="lead">'+q.q+'</p>'+optsHtml(q.o),true);
+      on(".opt",function(el){lock();act("qguess",{i:+el.dataset.i});});
+    }else{
+      view('<p class="eyebrow">Sawaal '+n+'</p><h2>'+q.q+'</h2>'+waitHtml(pn(gs)+" guess kar raha hai. Tumhara jawab chhupa hai."),true);
+    }
+  }else{
+    var ok=d.ok===1;
+    view('<p class="verdict '+(ok?"good":"bad")+'">'+(ok?"Sahi guess! +2 "+nm(gs):"Galat guess")+'</p>'+
+      '<p class="lead">'+pn(sub)+' ne chuna tha: <b style="color:var(--ink)">'+q.o[d.sec]+'</b></p>'+
+      (ok?"":'<p class="lead">'+pn(gs)+' ka guess: '+q.o[d.g]+'</p>')+
+      '<p>'+say(ok?OK:NO)+'</p>'+
+      '<button class="btn primary" id="nx">'+(d.i<d.qs.length-1?"Agla sawaal":"Round khatam")+'</button>',true);
+    on("#nx",function(){lock();act("next");});
+  }
+}
+function vMatch(){
+  var d=G.d,q=WYR[d.qs[d.i]],n=(d.i+1)+" / "+d.qs.length;
+  if(d.st==="pick"){
+    if(d.done[role]){
+      view('<p class="eyebrow">Sawaal '+n+'</p><h2>Jawab bhej diya</h2>'+waitHtml(pn(1-role)+" ka jawab aane do. Dono ek saath khulenge."),true);
+    }else{
+      view('<p class="eyebrow">Sawaal '+n+' · chupke se chuno</p><h2>Ye ya wo?</h2>'+optsHtml(q),true);
+      on(".opt",function(el){lock();act("mpick",{i:+el.dataset.i});});
+    }
+  }else{
+    var same=d.a[0]===d.a[1];
+    view('<p class="verdict '+(same?"good":"bad")+'">'+(same?"Match! +2 dono ko":"Match nahi hua")+'</p>'+
+      '<div class="three"><p>'+pn(0)+': '+q[d.a[0]]+'</p><p>'+pn(1)+': '+q[d.a[1]]+'</p></div>'+
+      '<p class="lead">'+say(same?SAME:DIFF)+'</p>'+
+      '<button class="btn primary" id="nx">'+(d.i<d.qs.length-1?"Agla sawaal":"Round khatam")+'</button>',true);
+    on("#nx",function(){lock();act("next");});
+  }
+}
+
+function vTap(){
+  var d=G.d;
+  if(d.st==="ready"){
+    view('<h2>Tap Battle ke liye taiyaar?</h2><p class="lead">Call par "ready" bol do. Koi bhi start dabaye to dono phone par 3 second ka countdown chalega, phir 10 second tak tap karo.</p><button class="btn primary" id="go">Countdown shuru</button>',true);
+    on("#go",function(){lock();act("tapgo");});
+  }else if(d.st==="run"){
+    tapStart();
+  }else{
+    var c=d.c,w=c[0]===c[1]?-1:(c[0]>c[1]?0:1);
+    view('<p class="verdict '+(w<0?"":"good")+'">'+(w<0?"Barabari! +1 dono ko":nm(w)+" jeeta! +3")+'</p>'+
+      '<div class="two"><div><p class="eyebrow">'+nm(0)+'</p><p class="big n1">'+c[0]+'</p></div><div><p class="eyebrow">'+nm(1)+'</p><p class="big n2">'+c[1]+'</p></div></div>'+
+      '<p class="lead">'+(w<0?"Itni barabar takkar! Ungliyan bhi match karti hain.":"Ungliyon mein bijli hai. Haara hua player ab call par haath hila ke dikhaye.")+'</p>'+
+      '<button class="btn primary" id="nx">Agla round</button>',true);
+    on("#nx",function(){lock();act("next");});
+  }
+}
+function tapStart(){
+  if(tapRunV===G.v)return;
+  tapRunV=G.v;myTap=0;
+  var v=G.v;
+  function cd(n){
+    view('<div class="count" role="status">'+(n>0?n:"GO!")+'</div>',false);
+    if(n>0){later(function(){cd(n-1);},800);}else{later(battle,450);}
+  }
+  function battle(){
+    view('<div class="tapview"><div class="opp"><small>'+nm(1-role)+'</small><b id="oc">0</b></div><div class="clock" id="clk">10</div>'+
+      '<button class="tapbtn t'+(role+1)+'" id="tb"><span><small>Tum</small><b id="mc">0</b></span></button></div>',false);
+    var over=false,sent=false;
+    function hit(){
+      if(over)return;
+      myTap++;qs("#mc").textContent=myTap;
+      if(nr&&!sent){sent=true;setTimeout(function(){sent=false;if(nr)nr.presence({tap:{v:v,n:myTap}}).catch(function(){});},90);}
+    }
+    qs("#tb").addEventListener("pointerdown",function(e){e.preventDefault();hit();});
+    qs("#tb").addEventListener("keydown",function(e){if(e.key===" "||e.key==="Enter"){e.preventDefault();hit();}});
+    var t0=performance.now();
+    var id=setInterval(function(){
+      var left=Math.max(0,10-(performance.now()-t0)/1000);
+      var clk=qs("#clk");if(clk)clk.textContent=Math.ceil(left);
+      if(left<=0){
+        over=true;clearInterval(id);
+        if(nr)nr.presence({tap:{v:v,n:myTap}}).catch(function(){});
+        act("tapdone",{n:myTap});
+        view('<h2>Time up! '+myTap+' tap</h2>'+waitHtml("Dost ka count aa raha hai…"),true);
+      }
+    },100);
+    timers.push(id);
+  }
+  cd(3);
+}
+
+function vDare(){
+  var d=G.d,perf=d.i,judge=1-perf,txt=DARES[d.ds[d.i]],n=(d.i+1)+" / "+d.ds.length;
+  if(role===perf){
+    view('<p class="eyebrow">Dare '+n+' · tumhare liye</p><h2 class="dare">'+txt+'</h2>'+
+      '<div class="timer"><b id="tm">30</b><span class="lead">second</span></div>'+
+      '<button class="btn ghost" id="tmb">Timer chalao</button>'+
+      waitHtml('Video ya voice call par karke dikhao. '+pn(judge)+' rate karega.'),true);
+    on("#tmb",function(el){
+      el.disabled=true;var t=30;
+      var id=setInterval(function(){t--;var e=qs("#tm");if(e)e.textContent=t;if(t<=0)clearInterval(id);},1000);
+      timers.push(id);
+    });
+  }else{
+    view('<p class="eyebrow">Dare '+n+' · '+pn(perf)+' ke liye · tum judge ho</p><h2 class="dare">'+txt+'</h2>'+
+      '<p class="lead">'+pn(perf)+' ye dare karega. Dekho aur rate karo.</p><hr>'+
+      '<div class="two"><button class="btn primary" data-s="2">Maza aaya +2</button><button class="btn ghost" data-s="1">Thoda boring +1</button></div>'+
+      '<button class="btn ghost" data-s="0">Pass, comfortable nahi (0 points)</button><p class="fine">Koi pressure nahi. Pass karna bilkul theek hai.</p>',true);
+    on("[data-s]",function(el){lock();act("dj",{s:+el.dataset.s});});
+  }
+}
+
+function vEmoji(){
+  var d=G.d,q=EMOJI[d.ps[d.i]],n=(d.i+1)+" / "+d.ps.length;
+  if(d.st==="q"){
+    view('<p class="eyebrow">Puzzle '+n+'</p><div class="emoji" role="img" aria-label="Emoji puzzle">'+q.e+'</div>'+
+      '<p class="lead">Is emoji ka filmy naam call par bolo. Jo pehle sahi bole wo jeeta.</p>'+
+      '<p class="hint" id="hint" hidden>Hint: '+q.h+'</p>'+
+      '<div class="two"><button class="btn ghost" id="hb">Hint do</button><button class="btn primary" id="rv">Jawab dikhao</button></div>',true);
+    on("#hb",function(el){qs("#hint").hidden=false;el.disabled=true;});
+    on("#rv",function(){lock();act("reveal");});
+  }else{
+    view('<p class="eyebrow">Puzzle '+n+'</p><div class="emoji" role="img" aria-label="Emoji puzzle">'+q.e+'</div><div class="answer">'+q.a+'</div>'+
+      '<p class="eyebrow">Kisne pehle bataya?</p>'+
+      '<div class="three"><button class="btn pick1" data-w="0">'+nm(0)+(role===0?" (tum)":"")+' +2</button><button class="btn pick2" data-w="1">'+nm(1)+(role===1?" (tum)":"")+' +2</button><button class="btn ghost" data-w="-1">Koi nahi</button></div>',true);
+    on("[data-w]",function(el){lock();act("who",{w:+el.dataset.w});});
+  }
+}
+
+function vFinal(){
+  var a=G.sc[0],b=G.sc[1],max=Math.max(a,b,1),w=a===b?-1:(a>b?0:1),tt=G.ty;
+  function winnerOf(cats){
+    var x=[0,0];cats.forEach(function(c){x[0]+=tt[c][0];x[1]+=tt[c][1];});
+    return x[0]===x[1]?"Barabar":nm(x[0]>x[1]?0:1);
+  }
+  var awards=[["Sabse tez ungliyan",winnerOf(["tap"])],["Dil padhne wala",winnerOf(["quiz","match"])],["Dare ka star",winnerOf(["dare"])],["Filmy encyclopedia",winnerOf(["emoji"])]];
+  var line=w<0?"Dono barabar! Ab ek tie-breaker dare baaki hai.":nm(w)+" aaj ke champion hain. "+nm(1-w)+" ko ab chai ya samosa ka karz chukana hai.";
+  view('<p class="eyebrow">Khel khatam</p><h2>'+(w<0?"Dosti ki jeet!":pn(w)+" jeete!")+'</h2><p class="lead">'+line+'</p>'+
+    '<div class="bars">'+
+      '<div class="bar"><div class="row"><span class="n1">'+nm(0)+'</span><b>'+a+'</b></div><div class="tr"><div class="fl p1" data-w="'+Math.round(a/max*100)+'"></div></div></div>'+
+      '<div class="bar"><div class="row"><span class="n2">'+nm(1)+'</span><b>'+b+'</b></div><div class="tr"><div class="fl p2" data-w="'+Math.round(b/max*100)+'"></div></div></div>'+
+    '</div>'+
+    '<ul class="awards">'+awards.map(function(x){return '<li><span>'+x[0]+'</span><span>'+x[1]+'</span></li>';}).join("")+'</ul>'+
+    '<button class="btn primary" id="again">Phir se khelo</button><button class="btn ghost" id="out">Room chhodo</button>',true);
+  later(function(){Array.prototype.forEach.call(app.querySelectorAll(".fl"),function(f){f.style.width=f.dataset.w+"%";});},60);
+  on("#again",function(){lock();act("again");});
+  on("#out",leave);
+  if(confV!==G.v){confV=G.v;confetti();}
+}
+function confetti(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  var box=document.createElement("div");box.className="confetti";box.setAttribute("aria-hidden","true");
+  var cols=["#ff6a5c","#2fd3c0","#ffcf40","#fff4e3"],i;
+  for(i=0;i<46;i++){
+    var s=document.createElement("span");
+    s.style.left=Math.random()*100+"%";s.style.background=cols[i%cols.length];
+    s.style.animationDuration=(2.4+Math.random()*2.2)+"s";s.style.animationDelay=(Math.random()*.8)+"s";
+    box.appendChild(s);
+  }
+  document.body.appendChild(box);
+  setTimeout(function(){box.remove();},5600);
+}
+
+/* ---------- connect / leave ---------- */
+function leaveQuiet(){
+  try{if(nr)nr.leave();}catch(e){}
+  nr=null;G=null;gPeer=null;lastV=-1;lastIntent="";partner={name:"",here:false};noHost=false;tapRunV=-1;
+  clearTimeout(tapT);
+}
+function leave(){leaveQuiet();clearSaved();mode="home";errMsg="";render();}
+
+async function enter(c,r,name,resumeG){
+  if(!base){errMsg="Online khelne ke liye ye page sign-in karke, Share link se kholna padega.";vHome();return;}
+  code=c;role=r;myName=name;errMsg="";
+  view('<p class="lead">Room se jud raha hoon…</p>',false);
+  try{nr=await base.join("dd-"+code);}
+  catch(e){errMsg="Room se judne mein dikkat aayi. Thodi der baad dobara try karo.";nr=null;vHome();return;}
+  nr.onPeers(handlePeers,function(){errMsg="Connection toot gaya. Page dobara kholo.";});
+  var pres={role:role===0?"host":"guest",name:myName};
+  if(role===0&&resumeG&&resumeG.ph){
+    G=resumeG;
+    if(G.ph==="play"&&G.d){
+      var id=R[G.r].id;
+      if(id==="quiz"&&G.d.st==="guess")G.d.st="ans";
+      if(id==="match"&&G.d.st==="pick")G.d.done=[0,0];
+      if(id==="tap"&&G.d.st==="run")G.d.st="ready";
+    }
+    mode="play";
+    G.v=(G.v||1);
+    pres.s=null;
+  }
+  nr.presence(pres).catch(function(){});
+  save();
+  if(role===0){
+    if(G){commit();}else{mode="hostWait";vHostWait();}
+  }else{
+    mode="guestWait";noHost=false;vGuestWait();
+    setTimeout(function(){if(mode==="guestWait"&&!partner.here){noHost=true;render();}},9000);
+  }
+  handlePeers();
+}
+
+/* ---------- boot ---------- */
+try{
+  base=null;
+  if(window.claude&&window.claude.use){
+    window.claude.use("room").then(function(r){base=r;},function(){base=null;});
+  }
+}catch(e){base=null;}
+vHome();
+})();
+</script>
+
+</body></html>
